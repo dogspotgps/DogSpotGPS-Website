@@ -1,0 +1,3 @@
+
+import Link from 'next/link';
+export default function Privacy(){return <main className="section"><div className="container card"><h1>DogSpotGPS Privacy Policy</h1><p>DogSpotGPS collects account information, live dog sighting photos, GPS/time metadata, lost dog case information, and reward-related records only to operate lost dog recovery services.</p><p>Live sighting exact GPS and full background details are protected until an owner confirms the dog match. DogSpotGPS does not sell personal location data.</p><p>Contact: admin@dogspotgps.com</p><Link href="/" className="btn primary">Back Home</Link></div></main>}

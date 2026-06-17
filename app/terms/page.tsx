@@ -1,0 +1,3 @@
+
+import Link from 'next/link';
+export default function Terms(){return <main className="section"><div className="container card"><h1>DogSpotGPS Terms of Service</h1><p>DogSpotGPS is a community-powered lost dog recovery platform. Users must observe, photograph, and report only. Do not chase animals, trespass, or put yourself or others in danger.</p><p>Rewards are owner-funded and released according to owner confirmation and platform rules. DogSpotGPS provides tools for recovery coordination and may charge disclosed platform fees.</p><p>Contact: admin@dogspotgps.com</p><Link href="/" className="btn primary">Back Home</Link></div></main>}
