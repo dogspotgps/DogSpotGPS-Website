@@ -1,6 +1,6 @@
 
 'use client';
-import Image from 'next/image';
+import Image from 'next/image'; 
 import { useEffect, useRef, useState } from 'react';
 import { Camera, Dog, MapPin, Trophy, ShieldCheck, Bell, Heart, Upload, Navigation, MessageCircle, Share2, Store, User, X, Check, Clock, Star } from 'lucide-react';
 import { DogCase, Sighting, getCases, saveCase, getSightings, saveSighting, updateCase, updateSighting, money, uuid, addLead } from '@/lib/store';
