@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { Camera, Dog, MapPin, Trophy, ShieldCheck, Bell, Heart, Upload, Navigation, MessageCircle, Share2, Store, User, X, Check, Clock, Star } from 'lucide-react';
 import { DogCase, Sighting, getCases, saveCase, getSightings, saveSighting, updateCase, updateSighting, money, uuid, addLead } from '@/lib/store';
-
+import { auth } from '@/lib/firebase';
 type Page = 'home'|'spot'|'report'|'active'|'review'|'radar'|'command'|'earnings'|'leaderboard'|'partners'|'profile'|'admin';
 const navs:{key:Page,label:string}[]=[{key:'home',label:'Home'},{key:'active',label:'Active Searches'},{key:'radar',label:'Reward Radar'},{key:'partners',label:'Partners'},{key:'profile',label:'Login/Profile'}];
 
