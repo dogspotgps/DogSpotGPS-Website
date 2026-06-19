@@ -62,3 +62,4 @@ function Earnings(){return null;}
 function Leaderboard(){return null;}
 function Partners(){return null;}
 function Footer({go}:{go:(p:Page)=>void}){return null;}
+}
