@@ -46,12 +46,26 @@ function Partners(){return <section className="section"><div className="containe
   const [password,setPassword]=useState('');
   const [msg,setMsg]=useState('');
 
+  
+
   async function continueLogin(){
-    setMsg('Login wiring is ready, but Firebase Auth functions still need imports added.');
+  if(!auth){
+    setMsg('Firebase Auth not configured.');
+    return;
   }
 
-  return (
-    <section className="section">
+  try{
+    await signInWithEmailAndPassword(auth,email,password);
+    setMsg('Signed in successfully.');
+  }catch(e:any){
+    try{
+      await createUserWithEmailAndPassword(auth,email,password);
+      setMsg('Account created and signed in.');
+    }catch(err:any){
+      setMsg(err.message || 'Login failed.');
+    }
+  }  return (
+     <section className="section">
       <div className="container split">
         <div className="card">
           <h2>Login / Profile</h2>
@@ -67,6 +81,7 @@ function Partners(){return <section className="section"><div className="containe
         </div>
       </div>
     </section>
-  )}
+  );
+  }
 function Admin({cases,sightings}:{cases:DogCase[];sightings:Sighting[]}){return <section className="section"><div className="container"><h2>Admin Support</h2><div className="grid three"><div className="card"><h3>{cases.length}</h3><p>Cases</p></div><div className="card"><h3>{sightings.length}</h3><p>Sightings</p></div><div className="card"><h3>0</h3><p>Critical alerts</p></div></div></div></section>}
 function Footer({go}:{go:(p:Page)=>void}){return <footer className="footer"><div className="container footerGrid"><div><div className="brand"><Image src="/images/dogspotgps-icon.png" width={46} height={46} alt="logo"/>DogSpotGPS</div><p>Picture-first, GPS-timestamped lost dog recovery. Observe. Photograph. Report.</p></div><div><h3>Website</h3><p><button onClick={()=>go('spot')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Spot a Dog</button></p><p><button onClick={()=>go('report')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Report Lost Dog</button></p><p><button onClick={()=>go('partners')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Partners</button></p></div><div><h3>Legal</h3><p><a href="/privacy">Privacy</a></p><p><a href="/terms">Terms</a></p><p>support: admin@dogspotgps.com</p></div></div></footer>}
