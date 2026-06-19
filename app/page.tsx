@@ -56,7 +56,7 @@ function Partners(){return <section className="section"><div className="containe
 
   try{
     await signInWithEmailAndPassword(auth,email,password);
-    setMsg('Signed in successfully.');
+    setMsg('Signed in successfully.'); 
   }catch(e:any){
     try{
       await createUserWithEmailAndPassword(auth,email,password);
