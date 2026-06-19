@@ -64,7 +64,8 @@ function Partners(){return <section className="section"><div className="containe
     }catch(err:any){
       setMsg(err.message || 'Login failed.');
     }
-  }  return (
+  }  
+   return (
      <section className="section">
       <div className="container split">
         <div className="card">
