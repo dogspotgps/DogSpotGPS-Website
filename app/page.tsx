@@ -41,21 +41,31 @@ function Earnings(){return <section className="section"><div className="containe
 function Leaderboard(){return <section className="section"><div className="container"><h2>Community Heroes</h2><div className="grid three">{['Local Hero','Dog Rescuer','Community Guardian'].map((x,i)=><div className="card" key={x}><Star/> <h3>{x}</h3><p>{12-i*3} confirmed sightings</p></div>)}</div></div></section>}
 function Partners(){return <section className="section"><div className="container"><h2>Partner Marketplace</h2><p className="sectionLead">Monetization belongs here — not on camera, owner confirmation, GPS unlock, or recovery navigation screens.</p><div className="grid three">{['Veterinarians','Pet Insurance','Dog Trainers','Groomers','Boarding','Pet Stores','GPS Collars','Microchipping','Shelters'].map(x=><div className="card" key={x}><Store/><h3>{x}</h3><p>Sponsored partner category available for trusted local and national providers.</p></div>)}</div></div></section>}
  function Profile(){
+  const [email,setEmail]=useState('');
+  const [password,setPassword]=useState('');
+  const [msg,setMsg]=useState('');
+
+  async function continueLogin(){
+    setMsg('Login wiring is ready, but Firebase Auth functions still need imports added.');
+  }
+
   return (
     <section className="section">
       <div className="container split">
         <div className="card">
           <h2>Login / Profile</h2>
           <p>Firebase configuration detected.</p>
-          <p>Authentication wiring in progress.</p>
+          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email"/>
+          <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password"/>
+          <button className="primary" onClick={continueLogin}>Continue</button>
+          {msg&&<p>{msg}</p>}
         </div>
-
         <div className="card">
           <h2>Account Tools</h2>
-          <p>Account management panel.</p>
+          <p>Email verification, payout setup, account deletion, and support tools.</p>
         </div>
       </div>
     </section>
   )
-}function Admin({cases,sightings}:{cases:DogCase[];sightings:Sighting[]}){return <section className="section"><div className="container"><h2>Admin Support</h2><div className="grid three"><div className="card"><h3>{cases.length}</h3><p>Cases</p></div><div className="card"><h3>{sightings.length}</h3><p>Sightings</p></div><div className="card"><h3>0</h3><p>Critical alerts</p></div></div></div></section>}
+function Admin({cases,sightings}:{cases:DogCase[];sightings:Sighting[]}){return <section className="section"><div className="container"><h2>Admin Support</h2><div className="grid three"><div className="card"><h3>{cases.length}</h3><p>Cases</p></div><div className="card"><h3>{sightings.length}</h3><p>Sightings</p></div><div className="card"><h3>0</h3><p>Critical alerts</p></div></div></div></section>}
 function Footer({go}:{go:(p:Page)=>void}){return <footer className="footer"><div className="container footerGrid"><div><div className="brand"><Image src="/images/dogspotgps-icon.png" width={46} height={46} alt="logo"/>DogSpotGPS</div><p>Picture-first, GPS-timestamped lost dog recovery. Observe. Photograph. Report.</p></div><div><h3>Website</h3><p><button onClick={()=>go('spot')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Spot a Dog</button></p><p><button onClick={()=>go('report')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Report Lost Dog</button></p><p><button onClick={()=>go('partners')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Partners</button></p></div><div><h3>Legal</h3><p><a href="/privacy">Privacy</a></p><p><a href="/terms">Terms</a></p><p>support: admin@dogspotgps.com</p></div></div></footer>}
