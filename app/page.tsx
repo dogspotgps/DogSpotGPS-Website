@@ -8,8 +8,14 @@ import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 type Page = 'home'|'spot'|'report'|'active'|'review'|'radar'|'command'|'earnings'|'leaderboard'|'partners'|'profile'|'admin';
 const navs:{key:Page,label:string}[]=[{key:'home',label:'Home'},{key:'active',label:'Active Searches'},{key:'radar',label:'Reward Radar'},{key:'partners',label:'Partners'},{key:'profile',label:'Login/Profile'}];
-
-export default function Page(){
+const Footer = ({go}: any) => null;
+const Earnings = () => null;
+const Leaderboard = () => null;
+const Partners = () => null;
+const ActiveSearches = ({cases,sightings,go,setSelectedCase}: any) => null;
+const RewardRadar = ({cases,go,setSelectedCase}: any) => null;
+const CommandCenter = ({cases,sightings,selectedCase,go}: any) => null;
+const OwnerReview = ({cases,sightings,go,refresh}: any) => null;export default function Page(){
  const [page,setPage]=useState<Page>('home'); const [cases,setCases]=useState<DogCase[]>([]); const [sightings,setSightings]=useState<Sighting[]>([]); const [selectedCase,setSelectedCase]=useState<string>('case-bella'); const [lead,setLead]=useState('');
  useEffect(()=>{setCases(getCases()); setSightings(getSightings());},[]);
  const refresh=()=>{setCases(getCases());setSightings(getSightings())}
@@ -48,19 +54,7 @@ function ReportDog({go,refresh}:{go:(p:Page)=>void;refresh:()=>void}){const [pho
         </div>
         <div className="card">
           <h2>Account Tools</h2>
-          <p>Email verification, payout setup, account deletion, and support tools.</p>
-        </div>
-      </div>
-    </section>
-  );
- } 
-function ActiveSearches({cases,sightings,go,setSelectedCase}: any) {
-  return null;
-}
-function RewardRadar({cases,go,setSelectedCase}: any) {
-  return null;
-}
-function CommandCenter({cases,sightings,selectedCase,go}: any) {
+          
   return null;
 }
 function Earnings() { return null; }
