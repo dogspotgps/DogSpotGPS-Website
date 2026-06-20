@@ -44,5 +44,4 @@ function Profile(){return null;}
 function Earnings() { return null; }
 function Leaderboard() { return null; }
 function Partners() { return null; }
-function Footer({go}: any) { return 
- null; }
+function Footer({go}: any) { return null; }
