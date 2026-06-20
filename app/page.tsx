@@ -38,26 +38,11 @@ function SpotDog({go,refresh}:{go:(p:Page)=>void;refresh:()=>void}){const video=
  async function start(){setStatus('Requesting camera/GPS...'); try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); if(video.current) video.current.srcObject=stream; setStarted(true); navigator.geolocation.getCurrentPosition(p=>setLoc({lat:p.coords.latitude,lng:p.coords.longitude}),()=>setLoc({lat:42.1292,lng:-80.0851})); setStatus('Live camera ready. Take photo now.')}catch(e){setStatus('Camera blocked. Use a phone/browser with camera permission enabled.')}}
  function snap(){const v=video.current,c=canvas.current;if(!v||!c)return; c.width=v.videoWidth||1280;c.height=v.videoHeight||720; const ctx=c.getContext('2d');ctx?.drawImage(v,0,0,c.width,c.height); setPhoto(c.toDataURL('image/jpeg',.88));}
  function submit(){if(!photo){alert('Take a live DogSpotGPS photo first. Gallery uploads are not accepted.');return} const s:Sighting={id:uuid('sighting'),photo,fullPhoto:photo,previewPhoto:photo,location:loc||{lat:42.1292,lng:-80.0851},approx:'Approximate area only until owner confirms',exactHidden:true,createdAt:new Date().toISOString(),confidence:Math.floor(72+Math.random()*21),status:'PENDING_OWNER',spotter:'Community Spotter',freshness:'Just now'}; saveSighting(s); refresh(); alert('Sighting submitted. Dog shown clearly; background and exact GPS stay protected until owner confirmation.'); go('review')}
- return <section className="section"><div className="container split"><div><h2>📸 Spot a Dog</h2><p className="sectionLead">Live capture only. No gallery uploads. Every valid sighting is GPS plotted and timestamped at the moment the picture is taken.</p><div className="cameraBox"><video ref={video} autoPlay playsInline muted/><canvas ref={canvas} className="hidden"/>{!started&&<div style={{textAlign:'center',padding:30}}><Camera size={70}/><h3>Camera opens immediately after permission.</h3><button className="btn gold" onClick={start}>Start Live Camera</button></div>}<div className="cameraOverlay"><div className="cameraTop"><span className="pill">GPS {loc?'locked':'pending'}</span><span className="pill">{new Date().toLocaleTimeString()}</span></div>{started&&<div className="cameraBottom"><button className="capture" onClick={snap} aria-label="capture photo"></button></div>}</div></div><p className="mini">{status}</p></div><div className="card"><h3>Protected preview</h3>{photo?<div className="protectedFrame"><img src={photo} alt="captured dog"/></div>:<p>Take a picture to see the owner-safe preview.</p>}<div className="pillrow"><button className="btn primary" onClick={submit}>Submit Sighting</button><button className="btn light" onClick={()=>go('home')}>Cancel</button></div><p className="mini">Owner sees the dog clearly first. Exact GPS and full background unlock only after owner confirmation.</p></div></div></section>}
-function ReportDog({go,refresh}:any){return null;} 
-function Profile(){
- return (
-    <section className="section">
-      <div className="container split">
-        <div className="card">
-          <h2>Login / Profile</h2>
-          <p>Firebase configuration detected.</p>
-          <input placeholder="Email"/>
-          <input placeholder="Password" type="password"/>
-          <button className="primary">Continue</button>
-          <p>Login wiring is ready.</p>
-        </div>
-        <div className="card">
-          <h2>Account Tools</h2>
-          
-  return null;
-}
+ function ReportDog({go,refresh}:any)
+{return null;}
+function Profile(){return null;}
 function Earnings() { return null; }
 function Leaderboard() { return null; }
 function Partners() { return null; }
-function Footer({go}: any) { return null; }}
+function Footer({go}: any) { return 
+ null; }
