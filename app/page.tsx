@@ -37,11 +37,4 @@ function Home({go,lead,setLead}:any){return null;}
 function SpotDog({go,refresh}:any){return null;}
 function ReportDog({go,refresh}:any){return null;}
 function Profile(){return null;}
-function ActiveSearches({cases,sightings,go,setSelectedCase}:any){return null;}
-function OwnerReview({cases,sightings,go,refresh}:any){return null;}
-function RewardRadar({cases,go,setSelectedCase}:any){return null;}
-function CommandCenter({cases,sightings,selectedCase,go}:any){return null;}
-function Earnings(){return null;}
-function Leaderboard(){return null;}
-function Partners(){return null;}
-function Footer({go}:any){return null;}
+
