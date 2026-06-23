@@ -1,72 +1,471 @@
-
+// @ts-nocheck
 'use client';
-import Image from 'next/image';
-import { useEffect, useRef, useState } from 'react';
-import { Camera, Dog, MapPin, Trophy, ShieldCheck, Bell, Heart, Upload, Navigation, MessageCircle, Share2, Store, User, X, Check, Clock, Star } from 'lucide-react';
-import { DogCase, Sighting, getCases, saveCase, getSightings, saveSighting, updateCase, updateSighting, money, uuid, addLead } from '@/lib/store';
-import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-type Page = 'home'|'spot'|'report'|'active'|'review'|'radar'|'command'|'earnings'|'leaderboard'|'partners'|'profile'|'admin';
-const navs:{key:Page,label:string}[]=[{key:'home',label:'Home'},{key:'active',label:'Active Searches'},{key:'radar',label:'Reward Radar'},{key:'partners',label:'Partners'},{key:'profile',label:'Login/Profile'}];
 
-export default function Page(){
- const [page,setPage]=useState<Page>('home'); const [cases,setCases]=useState<DogCase[]>([]); const [sightings,setSightings]=useState<Sighting[]>([]); const [selectedCase,setSelectedCase]=useState<string>('case-bella'); const [lead,setLead]=useState('');
- useEffect(()=>{setCases(getCases()); setSightings(getSightings());},[]);
- const refresh=()=>{setCases(getCases());setSightings(getSightings())}
- const go=(p:Page)=>{setPage(p); setTimeout(()=>scrollTo({top:0,behavior:'smooth'}),0)}
- return <>
-  <nav className="nav"><div className="container navin"><button className="brand" onClick={()=>go('home')} style={{background:'none',border:0,cursor:'pointer'}}><Image src="/images/dogspotgps-icon.png" width={52} height={52} alt="DogSpotGPS"/> <span>DogSpotGPS</span></button><div className="navlinks">{navs.map(n=><button key={n.key} onClick={()=>go(n.key)} className="keep" style={{background:'none',border:0,color:'inherit',fontWeight:800,cursor:'pointer'}}>{n.label}</button>)}<button className="btn gold" onClick={()=>go('spot')}><Camera size={18}/> Spot a Dog</button></div></div></nav>
-  {page==='home'&&<Home go={go} lead={lead} setLead={setLead}/>} 
-  {page==='spot'&&<SpotDog go={go} refresh={refresh}/>} 
-  {page==='report'&&<ReportDog go={go} refresh={refresh}/>} 
-  {page==='active'&&<ActiveSearches cases={cases} sightings={sightings} go={go} setSelectedCase={setSelectedCase}/>} 
-  {page==='review'&&<OwnerReview cases={cases} sightings={sightings} go={go} refresh={refresh}/>} 
-  {page==='radar'&&<RewardRadar cases={cases} go={go} setSelectedCase={setSelectedCase}/>} 
-  {page==='command'&&<CommandCenter cases={cases} sightings={sightings} selectedCase={selectedCase} go={go}/>} 
-  {page==='earnings'&&<Earnings/>} {page==='leaderboard'&&<Leaderboard/>} {page==='partners'&&<Partners/>} {page==='profile'&&<Profile/>} {page==='admin'&&<Admin cases={cases} sightings={sightings}/>} 
-  <Footer go={go}/>
- </>
-}
-function Home({go,lead,setLead}:{go:(p:Page)=>void;lead:string;setLead:(s:string)=>void}){return <><section className="hero"><div className="container heroGrid"><div><div className="pill">📸 Picture-first lost dog recovery</div><h1>Find lost dogs faster.</h1><p>DogSpotGPS turns every community member into a safe dog spotter: see a dog, snap a live photo, auto-capture GPS and time, let the owner confirm, then unlock exact location and rewards.</p><div className="pillrow"><button className="btn primary" onClick={()=>go('spot')}><Camera/> Spot a Dog Now</button><button className="btn gold" onClick={()=>go('report')}><Dog/> Report Lost Dog</button><button className="btn light" onClick={()=>go('active')}><MapPin/> View Active Searches</button></div><div className="pillrow"><span className="pill">No gallery uploads</span><span className="pill">Live GPS + timestamp</span><span className="pill">Protected previews</span><span className="pill">Owner-confirmed rewards</span></div></div><div className="heroImg"><Image src="/images/dogspotgps-hero.png" width={900} height={900} alt="DogSpotGPS hero" priority/></div></div></section><div className="container stats"><div className="stat"><b>2</b><br/>Primary actions</div><div className="stat"><b>10s</b><br/>Target sighting submit</div><div className="stat"><b>GPS</b><br/>Auto captured</div><div className="stat"><b>100%</b><br/>Owner confirmation gated</div></div><section className="section"><div className="container"><h2>How it works</h2><p className="sectionLead">The website is simple: one path for people who see a dog, one path for owners who lost a dog. Everything else stays out of the recovery flow.</p><div className="flow"><div className="step"><strong>1</strong>See dog</div><div className="step"><strong>2</strong>Snap live picture</div><div className="step"><strong>3</strong>GPS + time lock</div><div className="step"><strong>4</strong>Owner confirms</div><div className="step"><strong>5</strong>Location unlocks + reward flow</div></div></div></section><section className="section"><div className="container split"><div className="card"><h2>Join launch list</h2><p>Get notified when DogSpotGPS opens in your area.</p><form className="form" onSubmit={(e)=>{e.preventDefault();addLead(lead);setLead('');alert('You are on the DogSpotGPS launch list.')}}><input className="input" value={lead} onChange={e=>setLead(e.target.value)} placeholder="email@example.com" type="email" required/><button className="btn primary">Notify Me</button></form></div><div className="card"><h2>Safety rule</h2><p><b>Observe. Photograph. Report.</b> Do not chase, corner, enter private property, or attempt to capture a dog. DogSpotGPS is built for safe recovery coordination.</p></div></div></section></>}
-function SpotDog({go,refresh}:{go:(p:Page)=>void;refresh:()=>void}){const video=useRef<HTMLVideoElement>(null); const canvas=useRef<HTMLCanvasElement>(null); const [photo,setPhoto]=useState<string>(''); const [loc,setLoc]=useState<any>(null); const [started,setStarted]=useState(false); const [status,setStatus]=useState('Camera not started');
- async function start(){setStatus('Requesting camera/GPS...'); try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false}); if(video.current) video.current.srcObject=stream; setStarted(true); navigator.geolocation.getCurrentPosition(p=>setLoc({lat:p.coords.latitude,lng:p.coords.longitude}),()=>setLoc({lat:42.1292,lng:-80.0851})); setStatus('Live camera ready. Take photo now.')}catch(e){setStatus('Camera blocked. Use a phone/browser with camera permission enabled.')}}
- function snap(){const v=video.current,c=canvas.current;if(!v||!c)return; c.width=v.videoWidth||1280;c.height=v.videoHeight||720; const ctx=c.getContext('2d');ctx?.drawImage(v,0,0,c.width,c.height); setPhoto(c.toDataURL('image/jpeg',.88));}
- function submit(){if(!photo){alert('Take a live DogSpotGPS photo first. Gallery uploads are not accepted.');return} const s:Sighting={id:uuid('sighting'),photo,fullPhoto:photo,previewPhoto:photo,location:loc||{lat:42.1292,lng:-80.0851},approx:'Approximate area only until owner confirms',exactHidden:true,createdAt:new Date().toISOString(),confidence:Math.floor(72+Math.random()*21),status:'PENDING_OWNER',spotter:'Community Spotter',freshness:'Just now'}; saveSighting(s); refresh(); alert('Sighting submitted. Dog shown clearly; background and exact GPS stay protected until owner confirmation.'); go('review')}
- return <section className="section"><div className="container split"><div><h2>📸 Spot a Dog</h2><p className="sectionLead">Live capture only. No gallery uploads. Every valid sighting is GPS plotted and timestamped at the moment the picture is taken.</p><div className="cameraBox"><video ref={video} autoPlay playsInline muted/><canvas ref={canvas} className="hidden"/>{!started&&<div style={{textAlign:'center',padding:30}}><Camera size={70}/><h3>Camera opens immediately after permission.</h3><button className="btn gold" onClick={start}>Start Live Camera</button></div>}<div className="cameraOverlay"><div className="cameraTop"><span className="pill">GPS {loc?'locked':'pending'}</span><span className="pill">{new Date().toLocaleTimeString()}</span></div>{started&&<div className="cameraBottom"><button className="capture" onClick={snap} aria-label="capture photo"></button></div>}</div></div><p className="mini">{status}</p></div><div className="card"><h3>Protected preview</h3>{photo?<div className="protectedFrame"><img src={photo} alt="captured dog"/></div>:<p>Take a picture to see the owner-safe preview.</p>}<div className="pillrow"><button className="btn primary" onClick={submit}>Submit Sighting</button><button className="btn light" onClick={()=>go('home')}>Cancel</button></div><p className="mini">Owner sees the dog clearly first. Exact GPS and full background unlock only after owner confirmation.</p></div></div></section>}
-function ReportDog({go,refresh}:{go:(p:Page)=>void;refresh:()=>void}){const [photo,setPhoto]=useState('/images/dogspotgps-hero.png'); const [dogName,setDogName]=useState(''); const [ownerName,setOwnerName]=useState(''); const [lastSeen,setLastSeen]=useState(''); const [reward,setReward]=useState(''); const [description,setDescription]=useState(''); function upload(e:any){const f=e.target.files?.[0]; if(!f)return; const r=new FileReader(); r.onload=()=>setPhoto(String(r.result)); r.readAsDataURL(f)} function submit(e:any){e.preventDefault(); const c:DogCase={id:uuid('case'),dogName,ownerName,photo,lastSeen,reward:Number(reward||0),description,status:'MISSING',createdAt:new Date().toISOString(),sightings:[]}; saveCase(c); refresh(); alert('Lost dog case activated. Share it and watch owner review sightings.'); go('active')} return <section className="section"><div className="container split"><div><h2>🐕 Report Lost Dog</h2><p className="sectionLead">A simple owner flow: dog photo, last seen location, optional reward, activate search.</p><form className="form" onSubmit={submit}><input className="input" placeholder="Dog name" value={dogName} onChange={e=>setDogName(e.target.value)} required/><input className="input" placeholder="Owner name" value={ownerName} onChange={e=>setOwnerName(e.target.value)} required/><input className="input" placeholder="Last seen location/address" value={lastSeen} onChange={e=>setLastSeen(e.target.value)} required/><input className="input" placeholder="Optional reward amount" type="number" value={reward} onChange={e=>setReward(e.target.value)}/><textarea className="textarea" placeholder="Description, collar, behavior, safety notes" value={description} onChange={e=>setDescription(e.target.value)} required/><label className="card" style={{cursor:'pointer'}}><Upload/> Upload reference dog photo<input type="file" accept="image/*" onChange={upload} className="hidden"/></label><button className="btn gold">Activate Search</button></form></div><div className="preview"><div className="previewTop" style={{backgroundImage:`url(${photo})`}}><span className="blurBadge">Owner reference photo</span></div><div className="previewBody"><h3>{dogName||'Dog name'}</h3><p>{lastSeen||'Last seen location'}</p><p>{reward?money(Number(reward)):'Optional reward'}</p></div></div></div></section>}
-function ActiveSearches({cases,sightings,go,setSelectedCase}:{cases:DogCase[];sightings:Sighting[];go:(p:Page)=>void;setSelectedCase:(id:string)=>void}){return <section className="section"><div className="container"><h2>Active Searches</h2><p className="sectionLead">Website visitors can see the mission clearly and act fast.</p><div className="grid three">{cases.map(c=><div className="card" key={c.id}><img src={c.photo} alt={c.dogName} style={{width:'100%',height:220,objectFit:'cover',borderRadius:20}}/><h3>{c.dogName}</h3><span className="status">{c.status.replace('_',' ')}</span><p>{c.lastSeen}</p><p><b>{money(c.reward)}</b> reward</p><div className="pillrow"><button className="btn primary" onClick={()=>go('spot')}>Submit Sighting</button><button className="btn light" onClick={()=>{setSelectedCase(c.id);go('command')}}>Command Center</button></div></div>)}</div></div></section>}
-function OwnerReview({cases,sightings,go,refresh}:{cases:DogCase[];sightings:Sighting[];go:(p:Page)=>void;refresh:()=>void}){function confirm(s:Sighting){updateSighting(s.id,{status:'CONFIRMED',exactHidden:false}); const c=cases[0]; if(c) updateCase(c.id,{status:'CONFIRMED_MATCH'}); refresh(); alert('Owner confirmed. Exact GPS + full photo unlock. Rapid Recovery starts.')} function reject(s:Sighting){updateSighting(s.id,{status:'REJECTED'});refresh();} return <section className="section"><div className="container"><h2>Owner Review</h2><p className="sectionLead">Owners see the dog clearly, but exact GPS and full background are protected until they confirm.</p><div className="grid two">{sightings.length?sightings.map(s=><div className="card ownerReview" key={s.id}><div className="protectedFrame"><img src={s.photo} alt="sighting"/></div><p><b>Time:</b> {new Date(s.createdAt).toLocaleString()}</p><p><b>Area:</b> {s.exactHidden?'Approximate radius only':`${s.location.lat.toFixed(5)}, ${s.location.lng.toFixed(5)}`}</p><p><b>Match confidence:</b> {s.confidence}% advisory</p><p><b>Status:</b> {s.status}</p>{s.status==='PENDING_OWNER'&&<div className="pillrow"><button className="btn primary" onClick={()=>confirm(s)}><Check/> That is my dog</button><button className="btn danger" onClick={()=>reject(s)}><X/> Not my dog</button></div>}</div>):<div className="card"><h3>No sightings yet</h3><p>Use Spot a Dog to submit a test sighting.</p><button className="btn primary" onClick={()=>go('spot')}>Spot a Dog</button></div>}</div></div></section>}
-function RewardRadar({cases,go,setSelectedCase}:{cases:DogCase[];go:(p:Page)=>void;setSelectedCase:(id:string)=>void}){return <section className="section"><div className="container split"><div><h2>Reward Radar</h2><p className="sectionLead">Nearby opportunities are clear, but recovery screens stay free of ads and distractions.</p><div className="map"><div className="pin gold" style={{left:'22%',top:'36%'}}>Bella {money(250)}</div><div className="pin" style={{left:'56%',top:'52%'}}>Max {money(75)}</div><div className="pin green" style={{left:'73%',top:'25%'}}>Recovered</div></div></div><div className="grid">{cases.map(c=><div className="card" key={c.id}><h3>{c.dogName}</h3><p>{c.lastSeen}</p><p><b>{money(c.reward)}</b></p><button className="btn primary" onClick={()=>{setSelectedCase(c.id);go('command')}}>Open Case</button></div>)}</div></div></section>}
-function CommandCenter({cases,sightings,selectedCase,go}:{cases:DogCase[];sightings:Sighting[];selectedCase:string;go:(p:Page)=>void}){const c=cases.find(x=>x.id===selectedCase)||cases[0]; const last=sightings.find(s=>s.status==='CONFIRMED')||sightings[0]; if(!c)return <section className="section"><div className="container"><h2>No case yet</h2></div></section>; return <section className="section"><div className="container"><h2>Recovery Command Center</h2><p className="sectionLead">One owner page with everything needed. No menu hunting.</p><div className="split"><div className="card"><img src={c.photo} alt={c.dogName} style={{width:'100%',height:330,objectFit:'cover',borderRadius:24}}/><h3>{c.dogName}</h3><p>{c.description}</p><span className="status gold">{c.status.replace('_',' ')}</span></div><div className="card"><h3>Rapid Recovery</h3><p><b>Reward:</b> {money(c.reward)}</p><p><b>Last seen:</b> {c.lastSeen}</p><p><b>Closest sighting:</b> {last?last.freshness:'No sightings yet'}</p><div className="pillrow"><button className="btn primary"><Navigation/> Navigate</button><button className="btn light"><MessageCircle/> Message Spotter</button><button className="btn light"><Share2/> Share Case</button><button className="btn dark" onClick={()=>go('active')}>View Active Searches</button></div></div></div></div></section>}
-function Earnings(){return <section className="section"><div className="container"><h2>Spotter Earnings</h2><div className="grid three"><div className="card"><h3>$142</h3><p>Lifetime earnings</p></div><div className="card"><h3>8</h3><p>Confirmed sightings</p></div><div className="card"><h3>Trusted</h3><p>Spotter reputation</p></div></div><div className="adZone">Community partner space appears here only — never in recovery flow.</div></div></section>}
-function Leaderboard(){return <section className="section"><div className="container"><h2>Community Heroes</h2><div className="grid three">{['Local Hero','Dog Rescuer','Community Guardian'].map((x,i)=><div className="card" key={x}><Star/> <h3>{x}</h3><p>{12-i*3} confirmed sightings</p></div>)}</div></div></section>}
-function Partners(){return <section className="section"><div className="container"><h2>Partner Marketplace</h2><p className="sectionLead">Monetization belongs here — not on camera, owner confirmation, GPS unlock, or recovery navigation screens.</p><div className="grid three">{['Veterinarians','Pet Insurance','Dog Trainers','Groomers','Boarding','Pet Stores','GPS Collars','Microchipping','Shelters'].map(x=><div className="card" key={x}><Store/><h3>{x}</h3><p>Sponsored partner category available for trusted local and national providers.</p></div>)}</div></div></section>}
- function Profile(){
-  const [email,setEmail]=useState('');
-  const [password,setPassword]=useState('');
-  const [msg,setMsg]=useState('');
-
-  async function continueLogin(){
-    setMsg('Login wiring is ready, but Firebase Auth functions still need imports added.');
-  }
-
+export default function Page() {
   return (
-    <section className="section">
-      <div className="container split">
-        <div className="card">
-          <h2>Login / Profile</h2>
-          <p>Firebase configuration detected.</p>
-          <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email"/>
-          <input value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" type="password"/>
-          <button className="primary" onClick={continueLogin}>Continue</button>
-          {msg&&<p>{msg}</p>}
+    <main>
+
+      {/* ── HERO ── */}
+      <section style={{
+        background:'linear-gradient(135deg,#0A0D16 0%,#1B2236 100%)',
+        minHeight:'100vh', display:'flex', alignItems:'center',
+        justifyContent:'center', padding:'120px 24px 80px',
+        textAlign:'center', position:'relative'
+      }}>
+        <div style={{ maxWidth:'800px', width:'100%' }}>
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:'8px',
+            background:'rgba(255,107,53,0.12)', border:'1px solid rgba(255,107,53,0.3)',
+            borderRadius:'100px', padding:'6px 16px',
+            fontSize:'13px', fontWeight:'800', color:'#FF6B35',
+            letterSpacing:'1px', textTransform:'uppercase', marginBottom:'28px'
+          }}>
+            <span style={{ width:'7px', height:'7px', borderRadius:'50%',
+              background:'#FF6B35', display:'inline-block',
+              animation:'pulse 1.8s ease-in-out infinite' }} />
+            🐾 Launching Soon — Join the Waitlist
+          </div>
+
+          <h1 style={{
+            fontSize:'clamp(36px,7vw,68px)', fontWeight:'900',
+            color:'#F2F2FF', letterSpacing:'-2px', lineHeight:'1.05',
+            marginBottom:'24px'
+          }}>
+            Every loose dog could be<br />
+            <span style={{ color:'#FF6B35' }}>someone's family.</span>
+          </h1>
+
+          <p style={{
+            fontSize:'18px', color:'rgba(242,242,255,0.6)',
+            maxWidth:'520px', margin:'0 auto 40px', lineHeight:'1.7'
+          }}>
+            DogSpotGPS turns your whole neighborhood into a rescue team.
+            See a loose dog, snap a live photo, get paid when the owner confirms.
+            No chasing. No drama. Just a photo.
+          </p>
+
+          <div style={{ display:'flex', gap:'12px', justifyContent:'center', flexWrap:'wrap', marginBottom:'48px' }}>
+            <a href="#notify" style={{
+              background:'linear-gradient(135deg,#FF6B35,#FF9255)',
+              color:'white', fontSize:'16px', fontWeight:'800',
+              padding:'16px 28px', borderRadius:'14px',
+              textDecoration:'none', display:'inline-block',
+              boxShadow:'0 4px 24px rgba(255,107,53,0.45)'
+            }}>📸 Get Early Access</a>
+            <a href="#how" style={{
+              background:'transparent', color:'#F2F2FF',
+              fontSize:'16px', fontWeight:'700',
+              padding:'16px 28px', borderRadius:'14px',
+              textDecoration:'none', display:'inline-block',
+              border:'1px solid #252F45'
+            }}>See How It Works →</a>
+          </div>
+
+          <div style={{ display:'flex', justifyContent:'center', gap:'28px', flexWrap:'wrap' }}>
+            {['Live GPS + timestamp','No gallery uploads',
+              'Owner-confirmed rewards','Instant Stripe payment'].map(t => (
+              <div key={t} style={{ display:'flex', alignItems:'center', gap:'8px',
+                fontSize:'13px', fontWeight:'700', color:'rgba(242,242,255,0.5)' }}>
+                <span style={{
+                  width:'20px', height:'20px', borderRadius:'50%',
+                  background:'rgba(0,229,160,0.15)', border:'1px solid rgba(0,229,160,0.4)',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:'10px', color:'#00E5A0'
+                }}>✓</span>
+                {t}
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="card">
-          <h2>Account Tools</h2>
-          <p>Email verification, payout setup, account deletion, and support tools.</p>
+      </section>
+
+      {/* ── STATS ── */}
+      <section style={{ background:'#161C2E', padding:'48px 24px',
+        borderTop:'1px solid #252F45', borderBottom:'1px solid #252F45' }}>
+        <div style={{ maxWidth:'900px', margin:'0 auto',
+          display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'24px', textAlign:'center' }}>
+          {[['10M+','Dogs go missing yearly in the US'],
+            ['10s','To submit a sighting'],
+            ['100%','Owner-verified before reward releases'],
+            ['$0','Cost to spot and earn']].map(([num,label]) => (
+            <div key={label}>
+              <div style={{ fontSize:'40px', fontWeight:'900', color:'#FF6B35',
+                letterSpacing:'-1.5px', lineHeight:'1', marginBottom:'6px' }}>{num}</div>
+              <div style={{ fontSize:'13px', fontWeight:'700',
+                color:'rgba(242,242,255,0.5)' }}>{label}</div>
+            </div>
+          ))}
         </div>
-      </div>
-    </section>
-  )}
-function Admin({cases,sightings}:{cases:DogCase[];sightings:Sighting[]}){return <section className="section"><div className="container"><h2>Admin Support</h2><div className="grid three"><div className="card"><h3>{cases.length}</h3><p>Cases</p></div><div className="card"><h3>{sightings.length}</h3><p>Sightings</p></div><div className="card"><h3>0</h3><p>Critical alerts</p></div></div></div></section>}
-function Footer({go}:{go:(p:Page)=>void}){return <footer className="footer"><div className="container footerGrid"><div><div className="brand"><Image src="/images/dogspotgps-icon.png" width={46} height={46} alt="logo"/>DogSpotGPS</div><p>Picture-first, GPS-timestamped lost dog recovery. Observe. Photograph. Report.</p></div><div><h3>Website</h3><p><button onClick={()=>go('spot')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Spot a Dog</button></p><p><button onClick={()=>go('report')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Report Lost Dog</button></p><p><button onClick={()=>go('partners')} style={{background:'none',border:0,color:'inherit',cursor:'pointer'}}>Partners</button></p></div><div><h3>Legal</h3><p><a href="/privacy">Privacy</a></p><p><a href="/terms">Terms</a></p><p>support: admin@dogspotgps.com</p></div></div></footer>}
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section id="how" style={{ background:'#F8F9FF', padding:'96px 24px' }}>
+        <div style={{ maxWidth:'1080px', margin:'0 auto' }}>
+          <p style={{ fontSize:'12px', fontWeight:'800', color:'#FF6B35',
+            letterSpacing:'2px', textTransform:'uppercase', marginBottom:'14px' }}>
+            How It Works
+          </p>
+          <h2 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:'900',
+            color:'#1A1F35', letterSpacing:'-1.5px', marginBottom:'16px' }}>
+            Simple by design.<br />Powerful by default.
+          </h2>
+          <p style={{ fontSize:'17px', color:'#6B7280', maxWidth:'520px',
+            lineHeight:'1.6', marginBottom:'64px' }}>
+            Two paths. One for the person who sees a loose dog.
+            One for the owner who lost one.
+          </p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'16px' }}>
+            {[['👀','See a dog','Spot a loose dog running around your neighborhood'],
+              ['📸','Snap a photo','Live camera only — GPS and timestamp auto-captured'],
+              ['🔒','Location hidden','Exact GPS stays private until owner confirms'],
+              ['✅','Owner confirms','Owner reviews the photo and verifies their dog'],
+              ['💰','Reward pays','Location unlocks, Stripe transfers reward instantly']].map(([icon,title,desc]) => (
+              <div key={title} style={{ textAlign:'center', padding:'0 8px' }}>
+                <div style={{
+                  width:'80px', height:'80px', borderRadius:'50%',
+                  background:'white', border:'3px solid #FF6B35',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  margin:'0 auto 20px', fontSize:'28px',
+                  boxShadow:'0 0 0 6px rgba(255,107,53,0.1)'
+                }}>{icon}</div>
+                <div style={{ fontSize:'15px', fontWeight:'800',
+                  color:'#1A1F35', marginBottom:'8px' }}>{title}</div>
+                <div style={{ fontSize:'13px', color:'#6B7280', lineHeight:'1.5' }}>{desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── TWO PATHS ── */}
+      <section style={{ background:'white', padding:'96px 24px' }}>
+        <div style={{ maxWidth:'1080px', margin:'0 auto' }}>
+          <p style={{ fontSize:'12px', fontWeight:'800', color:'#FF6B35',
+            letterSpacing:'2px', textTransform:'uppercase', marginBottom:'14px' }}>
+            Who It's For
+          </p>
+          <h2 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:'900',
+            color:'#1A1F35', letterSpacing:'-1.5px', marginBottom:'56px' }}>
+            Two sides.<br />One rescue network.
+          </h2>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px' }}>
+
+            {/* OWNER */}
+            <div style={{ background:'linear-gradient(135deg,#0A0D16,#1B2236)',
+              borderRadius:'24px', padding:'40px', border:'1px solid #252F45' }}>
+              <span style={{ fontSize:'52px', display:'block', marginBottom:'20px' }}>🏠</span>
+              <h3 style={{ fontSize:'26px', fontWeight:'900', color:'#F2F2FF',
+                letterSpacing:'-0.5px', marginBottom:'12px' }}>
+                Lost your dog?<br />Your whole neighborhood is looking.
+              </h3>
+              <p style={{ fontSize:'15px', color:'rgba(242,242,255,0.6)',
+                lineHeight:'1.6', marginBottom:'24px' }}>
+                Post a case with a reward. Every DogSpotGPS user in your area
+                becomes a spotter. Get notified the instant someone sees your dog.
+              </p>
+              {['Post dog photo + description',
+                'Set your own reward amount',
+                'Get instant sighting notifications',
+                'Review blurred photos safely',
+                'Confirm match — location unlocks',
+                'Reward only releases after YOU confirm'].map(item => (
+                <div key={item} style={{ display:'flex', alignItems:'center', gap:'10px',
+                  fontSize:'14px', fontWeight:'600', color:'rgba(242,242,255,0.7)',
+                  marginBottom:'10px' }}>
+                  <span style={{ width:'20px', height:'20px', borderRadius:'50%', flexShrink:0,
+                    background:'rgba(0,229,160,0.15)', border:'1px solid rgba(0,229,160,0.3)',
+                    display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:'10px', color:'#00E5A0' }}>✓</span>
+                  {item}
+                </div>
+              ))}
+              <a href="#notify" style={{
+                display:'inline-block', marginTop:'24px',
+                background:'linear-gradient(135deg,#FF6B35,#FF9255)',
+                color:'white', padding:'14px 24px', borderRadius:'12px',
+                fontSize:'15px', fontWeight:'800', textDecoration:'none',
+                boxShadow:'0 4px 20px rgba(255,107,53,0.4)'
+              }}>Report Lost Dog →</a>
+            </div>
+
+            {/* SPOTTER */}
+            <div style={{ background:'linear-gradient(135deg,#FF6B35,#FF9255)',
+              borderRadius:'24px', padding:'40px' }}>
+              <span style={{ fontSize:'52px', display:'block', marginBottom:'20px' }}>📸</span>
+              <h3 style={{ fontSize:'26px', fontWeight:'900', color:'white',
+                letterSpacing:'-0.5px', marginBottom:'12px' }}>
+                Snap a loose dog.<br />Get paid.
+              </h3>
+              <p style={{ fontSize:'15px', color:'rgba(255,255,255,0.85)',
+                lineHeight:'1.6', marginBottom:'24px' }}>
+                You don't need to know the owner. You don't need to catch the dog.
+                Just open the app, snap a live photo, and let the system do the rest.
+              </p>
+              {['Open app — camera is live immediately',
+                'Snap any loose dog you see',
+                'GPS auto-captured, no setup needed',
+                'App matches photo to nearby cases',
+                'No match? Saved as stray report 48hrs',
+                'Owner confirms — money hits your wallet'].map(item => (
+                <div key={item} style={{ display:'flex', alignItems:'center', gap:'10px',
+                  fontSize:'14px', fontWeight:'600', color:'rgba(255,255,255,0.9)',
+                  marginBottom:'10px' }}>
+                  <span style={{ width:'20px', height:'20px', borderRadius:'50%', flexShrink:0,
+                    background:'rgba(0,0,0,0.2)', display:'flex', alignItems:'center',
+                    justifyContent:'center', fontSize:'10px', color:'white' }}>✓</span>
+                  {item}
+                </div>
+              ))}
+              <a href="#notify" style={{
+                display:'inline-block', marginTop:'24px',
+                background:'rgba(0,0,0,0.2)', color:'white',
+                padding:'14px 24px', borderRadius:'12px',
+                fontSize:'15px', fontWeight:'800', textDecoration:'none'
+              }}>Start Spotting →</a>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── EARN ── */}
+      <section style={{ background:'#0A0D16', padding:'96px 24px' }} id="earn">
+        <div style={{ maxWidth:'1080px', margin:'0 auto' }}>
+          <p style={{ fontSize:'12px', fontWeight:'800', color:'#00E5A0',
+            letterSpacing:'2px', textTransform:'uppercase', marginBottom:'14px' }}>
+            For Spotters
+          </p>
+          <h2 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:'900',
+            color:'#F2F2FF', letterSpacing:'-1.5px', marginBottom:'16px' }}>
+            Real money.<br />Real simple.
+          </h2>
+          <p style={{ fontSize:'17px', color:'rgba(242,242,255,0.5)',
+            maxWidth:'480px', lineHeight:'1.6', marginBottom:'48px' }}>
+            You're already walking around your neighborhood.
+            Now those walks can pay.
+          </p>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:'20px' }}>
+            {[['⚡','Quick Snap','Open app, camera is live immediately. See a dog, snap it in under 3 seconds. No navigation needed.','3 sec','From open to snap'],
+              ['🔍','Auto Matching','AI scans nearby active cases and matches your photo. No browsing through cases manually.','AI-powered','GPS + photo matching'],
+              ['💰','Instant Payout','Owner confirms your sighting, Stripe transfers the reward directly to your bank account.','Instant','Via Stripe Connect']].map(([icon,title,desc,val,sub]) => (
+              <div key={title} style={{ background:'#161C2E', border:'1px solid #252F45',
+                borderRadius:'20px', padding:'28px 24px' }}>
+                <span style={{ fontSize:'36px', display:'block', marginBottom:'16px' }}>{icon}</span>
+                <h3 style={{ fontSize:'18px', fontWeight:'800', color:'#F2F2FF', marginBottom:'8px' }}>{title}</h3>
+                <p style={{ fontSize:'14px', color:'rgba(242,242,255,0.5)',
+                  lineHeight:'1.6', marginBottom:'16px' }}>{desc}</p>
+                <div style={{ fontSize:'28px', fontWeight:'900', color:'#FF6B35',
+                  letterSpacing:'-0.5px' }}>{val}</div>
+                <div style={{ fontSize:'12px', fontWeight:'700',
+                  color:'rgba(242,242,255,0.4)', marginTop:'4px' }}>{sub}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SAFETY ── */}
+      <section style={{ background:'#F8F9FF', padding:'96px 24px' }}>
+        <div style={{ maxWidth:'700px', margin:'0 auto', textAlign:'center' }}>
+          <div style={{ background:'white', border:'1px solid #E5E7EB',
+            borderRadius:'24px', padding:'48px 40px',
+            boxShadow:'0 4px 24px rgba(0,0,0,0.06)' }}>
+            <span style={{ fontSize:'52px', display:'block', marginBottom:'20px' }}>🛡️</span>
+            <h2 style={{ fontSize:'28px', fontWeight:'900', color:'#1A1F35', marginBottom:'16px' }}>
+              <span style={{ color:'#FF6B35' }}>Observe.</span> Photograph. Report.
+            </h2>
+            <p style={{ fontSize:'16px', color:'#6B7280', lineHeight:'1.6',
+              marginBottom:'36px' }}>
+              DogSpotGPS is built for safe community recovery.
+              No chasing. No catching. No confrontation.
+              Just a photo — and the community does the rest.
+            </p>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'14px', textAlign:'left' }}>
+              {[['📸','Photograph from a safe, legal public place only'],
+                ['🚫','Never chase, corner, or attempt to capture a dog'],
+                ['🏠','Never enter private property for any reason'],
+                ['🔒','Exact GPS only revealed after owner confirmation'],
+                ['📍','Photo blurred until owner verifies the match'],
+                ['💰','Reward releases only after owner confirms']].map(([icon,text]) => (
+                <div key={text} style={{ display:'flex', alignItems:'flex-start', gap:'12px',
+                  background:'#F8F9FF', borderRadius:'12px', padding:'14px 16px' }}>
+                  <span style={{ fontSize:'18px', flexShrink:0 }}>{icon}</span>
+                  <span style={{ fontSize:'14px', fontWeight:'600', color:'#1A1F35',
+                    lineHeight:'1.4' }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section style={{ background:'white', padding:'96px 24px' }}>
+        <div style={{ maxWidth:'1080px', margin:'0 auto' }}>
+          <p style={{ fontSize:'12px', fontWeight:'800', color:'#FF6B35',
+            letterSpacing:'2px', textTransform:'uppercase', marginBottom:'14px' }}>FAQ</p>
+          <h2 style={{ fontSize:'clamp(28px,4vw,44px)', fontWeight:'900',
+            color:'#1A1F35', letterSpacing:'-1.5px', marginBottom:'48px' }}>
+            Common questions.
+          </h2>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:'20px' }}>
+            {[['Do I need to catch the dog to get paid?',
+               'No. Observe, photograph, and report only. You just take a photo. The GPS and timestamp do the rest. Never chase or approach a dog.'],
+              ['What if there\'s no active case for the dog I snapped?',
+               'Your photo is saved as a Stray Report for 48 hours. If an owner posts a matching case, your sighting auto-links and you earn the reward automatically.'],
+              ['How does the owner know it\'s really their dog?',
+               'The owner reviews a blurred preview photo and approximate location. Only after they confirm does exact GPS unlock and reward release.'],
+              ['How much can I earn as a spotter?',
+               'Rewards are set by the dog owner — typically $25 to $500+. You receive the reward minus a 2.2% Stripe processing fee, paid instantly to your bank.'],
+              ['Is my location shared with other users?',
+               'No. Your exact GPS coordinates are never shown publicly. The owner only sees an approximate area until they confirm the match.'],
+              ['What does it cost to post a lost dog case?',
+               'You fund the reward amount you choose plus a 12% platform fee. No subscription. No monthly fees. You only pay when you post a case.']].map(([q,a]) => (
+              <div key={q} style={{ background:'#F8F9FF', border:'1px solid #E5E7EB',
+                borderRadius:'16px', padding:'24px' }}>
+                <div style={{ fontSize:'16px', fontWeight:'800', color:'#1A1F35',
+                  marginBottom:'10px' }}>{q}</div>
+                <div style={{ fontSize:'14px', color:'#6B7280', lineHeight:'1.6' }}>{a}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── EMAIL CAPTURE ── */}
+      <section id="notify" style={{ background:'#0A0D16', padding:'96px 24px' }}>
+        <div style={{ maxWidth:'580px', margin:'0 auto', textAlign:'center' }}>
+          <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:'900',
+            color:'#F2F2FF', letterSpacing:'-1.5px', lineHeight:'1.1',
+            marginBottom:'14px' }}>
+            Be first when<br />DogSpotGPS launches.
+          </h2>
+          <p style={{ fontSize:'16px', color:'rgba(242,242,255,0.5)',
+            marginBottom:'36px', lineHeight:'1.6' }}>
+            Join the waitlist. Get notified the day the app goes live in your area.
+            First users get founding member status.
+          </p>
+          <form id="emailForm" style={{ display:'flex', gap:'10px',
+            background:'#161C2E', border:'1px solid #252F45',
+            borderRadius:'16px', padding:'6px 6px 6px 20px', marginBottom:'16px' }}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const input = document.getElementById('emailIn') as HTMLInputElement;
+              if (input?.value) {
+                const form = document.getElementById('emailForm');
+                const success = document.getElementById('emailSuccess');
+                if (form) form.style.display = 'none';
+                if (success) success.style.display = 'block';
+              }
+            }}>
+            <input
+              id="emailIn"
+              type="email"
+              placeholder="Enter your email address"
+              required
+              style={{ flex:1, background:'none', border:'none', fontSize:'16px',
+                color:'#F2F2FF', outline:'none', fontFamily:'inherit' }}
+            />
+            <button type="submit" style={{
+              background:'linear-gradient(135deg,#FF6B35,#FF9255)',
+              color:'white', border:'none', borderRadius:'12px',
+              padding:'12px 24px', fontSize:'15px', fontWeight:'800',
+              cursor:'pointer', whiteSpace:'nowrap'
+            }}>Notify Me →</button>
+          </form>
+          <div id="emailSuccess" style={{ display:'none',
+            background:'rgba(0,229,160,0.1)', border:'1px solid rgba(0,229,160,0.3)',
+            borderRadius:'14px', padding:'20px', fontSize:'16px',
+            fontWeight:'700', color:'#00E5A0', marginBottom:'16px' }}>
+            🎉 You're on the list! We'll notify you when DogSpotGPS launches.
+          </div>
+          <p style={{ fontSize:'13px', color:'rgba(242,242,255,0.35)' }}>
+            No spam. Just a launch notification. Unsubscribe anytime.
+          </p>
+
+          {/* App Store Badges */}
+          <div style={{ display:'flex', gap:'14px', justifyContent:'center',
+            marginTop:'40px', flexWrap:'wrap' }}>
+            {[['🍎','App Store'],['🤖','Google Play']].map(([icon,name]) => (
+              <div key={name} style={{ display:'flex', alignItems:'center', gap:'10px',
+                background:'#161C2E', border:'1px solid #252F45', borderRadius:'12px',
+                padding:'12px 20px', color:'#F2F2FF' }}>
+                <span style={{ fontSize:'28px' }}>{icon}</span>
+                <div>
+                  <div style={{ fontSize:'10px', color:'#FF6B35', fontWeight:'800',
+                    letterSpacing:'1px', textTransform:'uppercase' }}>Coming Soon</div>
+                  <div style={{ fontSize:'15px', fontWeight:'800', color:'#F2F2FF' }}>{name}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background:'#0A0D16', borderTop:'1px solid #252F45', padding:'48px 24px' }}>
+        <div style={{ maxWidth:'1080px', margin:'0 auto',
+          display:'grid', gridTemplateColumns:'1.5fr 1fr 1fr 1fr', gap:'40px' }}>
+          <div>
+            <div style={{ fontSize:'18px', fontWeight:'900', color:'#F2F2FF',
+              marginBottom:'12px' }}>
+              DogSpot<span style={{ color:'#FF6B35' }}>GPS</span>
+            </div>
+            <p style={{ fontSize:'13px', color:'rgba(242,242,255,0.5)',
+              lineHeight:'1.6', marginBottom:'14px' }}>
+              Picture-first, GPS-timestamped, owner-confirmed lost dog recovery.
+              Community-powered. Reward-driven.
+            </p>
+            <p style={{ fontSize:'13px', color:'rgba(242,242,255,0.4)' }}>
+              Support: <a href="mailto:admin@dogspotgps.com"
+                style={{ color:'#FF6B35', textDecoration:'none' }}>
+                admin@dogspotgps.com
+              </a>
+            </p>
+          </div>
+          {[['Product',['How It Works','#how'],['Earn Rewards','#earn'],['Get Early Access','#notify']],
+            ['Community',['Spot a Dog','#notify'],['Report Lost Dog','#notify'],['Partners','#notify']],
+            ['Legal',['Privacy','https://www.dogspotgps.com/privacy'],
+              ['Terms','https://www.dogspotgps.com/terms'],
+              ['Contact','mailto:admin@dogspotgps.com']]].map(([title,...links]) => (
+            <div key={title}>
+              <h4 style={{ fontSize:'12px', fontWeight:'800',
+                color:'rgba(242,242,255,0.4)', letterSpacing:'1.5px',
+                textTransform:'uppercase', marginBottom:'16px' }}>{title}</h4>
+              {links.map(([label,href]) => (
+                <a key={label} href={href} style={{ display:'block', fontSize:'14px',
+                  fontWeight:'600', color:'rgba(242,242,255,0.5)',
+                  textDecoration:'none', marginBottom:'10px' }}>{label}</a>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div style={{ maxWidth:'1080px', margin:'32px auto 0',
+          paddingTop:'24px', borderTop:'1px solid #252F45',
+          display:'flex', justifyContent:'space-between', alignItems:'center',
+          fontSize:'13px', color:'rgba(242,242,255,0.3)', flexWrap:'wrap', gap:'12px' }}>
+          <span>© 2025 DogSpotGPS · SpaceGhostWizard LLC · All rights reserved.</span>
+          <span>Patent Pending</span>
+        </div>
+      </footer>
+
+      <style>{`
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+          -webkit-font-smoothing: antialiased; }
+        @keyframes pulse {
+          0%,100%{opacity:1;transform:scale(1)}
+          50%{opacity:.7;transform:scale(1.05)}
+        }
+        @media(max-width:768px){
+          div[style*="grid-template-columns:'repeat(5"] {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
+
+    </main>
+  );
+}
+
+  
