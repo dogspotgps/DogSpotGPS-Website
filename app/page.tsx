@@ -768,34 +768,5 @@ function AdminPage({ cases }: { cases: CaseDoc[] }) {
 }
 
 function FooterComp({ go }: { go: (p: Page) => void }) {
-  return (
-    <footer className="footer"><div className="container">
-      <div className="footerGrid" style={{ marginBottom: '24px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 900, fontSize: '18px', marginBottom: '10px' }}>
-            <Image src="<Image src="/ChatGPT Image Jun 23, 2026 at 07_39_42 AM.png" width={46} height={46} alt="DogSpotGPS" /> width={40} height={40} alt="DogSpotGPS" />
-            DogSpot<span style={{ color: '#ff6b35' }}>GPS</span>
-          </div>
-          <p style={{ fontSize: '13px', color: 'rgba(215,235,255,.45)', lineHeight: '1.6', marginBottom: '10px' }}>Picture-first, GPS-timestamped, owner-confirmed lost dog recovery.</p>
-          <a href="mailto:admin@dogspotgps.com" style={{ fontSize: '13px', color: '#ff6b35' }}>admin@dogspotgps.com</a>
-        </div>
-        <div>
-          <h4 style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(215,235,255,.35)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '14px' }}>Product</h4>
-          {[['Spot a Dog','spot'],['Active Cases','active'],['Reward Radar','radar'],['Partners','partners']].map(([label,p]) => (
-            <button key={label} className="footerLink" onClick={() => go(p as Page)}>{label}</button>
-          ))}
-        </div>
-        <div>
-          <h4 style={{ fontSize: '11px', fontWeight: 800, color: 'rgba(215,235,255,.35)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '14px' }}>Legal</h4>
-          <a href="/privacy" className="footerLink">Privacy Policy</a>
-          <a href="/terms" className="footerLink">Terms of Service</a>
-          <a href="mailto:admin@dogspotgps.com" className="footerLink">Contact</a>
-        </div>
-      </div>
-      <div style={{ borderTop: '1px solid #1e3a5f', paddingTop: '20px', display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(215,235,255,.3)', flexWrap: 'wrap', gap: '10px' }}>
-        <span>© 2025 DogSpotGPS · SpaceGhostWizard LLC · All rights reserved.</span>
-        <span>Patent Pending</span>
-      </div>
-    </div></footer>
-  );
-}  
+  return null;
+}    
