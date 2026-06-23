@@ -773,7 +773,7 @@ function FooterComp({ go }: { go: (p: Page) => void }) {
       <div className="footerGrid" style={{ marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 900, fontSize: '18px', marginBottom: '10px' }}>
-            <Image src="/images/dogspotgps-icon.svg" width={40} height={40} alt="DogSpotGPS" />
+            <Image src="<Image src="/ChatGPT Image Jun 23, 2026 at 07_39_42 AM.png" width={46} height={46} alt="DogSpotGPS" /> width={40} height={40} alt="DogSpotGPS" />
             DogSpot<span style={{ color: '#ff6b35' }}>GPS</span>
           </div>
           <p style={{ fontSize: '13px', color: 'rgba(215,235,255,.45)', lineHeight: '1.6', marginBottom: '10px' }}>Picture-first, GPS-timestamped, owner-confirmed lost dog recovery.</p>
