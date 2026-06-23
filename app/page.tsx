@@ -62,8 +62,7 @@ export default function App() {
       <nav className="nav">
         <div className="navin">
           <button className="brand" onClick={() => go('home')}>
-            <Image src="/images/dogspotgps-icon.svg" width={46} height={46} alt="DogSpotGPS" />
-            <span>DogSpot<span style={{ color: '#ff6b35' }}>GPS</span></span>
+            <Image src="/ChatGPT Image Jun 23, 2026 at 07_12_24 AM.png" width={46} height={46} alt="DogSpotGPS" />            <span>DogSpot<span style={{ color: '#ff6b35' }}>GPS</span></span>
           </button>
           <div className="navlinks">
             {nav.map(n => (
