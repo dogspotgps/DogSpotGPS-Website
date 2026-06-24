@@ -118,7 +118,7 @@ function HomePage({ go, cases }: { go: (p: Page) => void; cases: CaseDoc[] }) {
             </div>
           </div>
           <div className="heroImg">
-            <Image src="/images/dogspotgps-hero.svg" width={480} height={480} alt="DogSpotGPS" priority />
+            <Image src="/images/dogspotgps-hero.png" width={480} height={480} alt="DogSpotGPS" priority />
           </div>
         </div>
       </section>
